@@ -163,6 +163,9 @@ var serverHelp = `
     holding multiple PEM encode CA certificate bundle files, which is used to 
     validate client connections. The provided CA certificates will be used 
     instead of the system roots. This is commonly used to implement mutual-TLS. 
+
+	--ignore-client-version, Disables server/client version check (but still
+	checks the protocol version).
 ` + commonHelp
 
 func server(args []string) {
@@ -187,6 +190,7 @@ func server(args []string) {
 	p := flags.String("p", "", "")
 	port := flags.String("port", "", "")
 	pid := flags.Bool("pid", false, "")
+	ignoreClientVersion := flags.Bool("ignore-client-version", false, "")
 	verbose := flags.Bool("v", false, "")
 
 	flags.Usage = func() {
@@ -216,6 +220,7 @@ func server(args []string) {
 	if config.KeySeed == "" {
 		config.KeySeed = settings.Env("KEY")
 	}
+	config.IgnoreClientVersion = *ignoreClientVersion
 	s, err := chserver.NewServer(config)
 	if err != nil {
 		log.Fatal(err)
