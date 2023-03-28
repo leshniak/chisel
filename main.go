@@ -16,6 +16,7 @@ import (
 	chserver "github.com/jpillora/chisel/server"
 	chshare "github.com/jpillora/chisel/share"
 	"github.com/jpillora/chisel/share/cos"
+	"github.com/jpillora/chisel/share/settings"
 )
 
 var help = `
@@ -98,10 +99,10 @@ var serverHelp = `
   Options:
 
     --host, Defines the HTTP listening host – the network interface
-    (defaults the environment variable HOST and falls back to 0.0.0.0).
+    (defaults the environment variable CHISEL_HOST and falls back to 0.0.0.0).
 
     --port, -p, Defines the HTTP listening port (defaults to the environment
-    variable PORT and fallsback to port 8080).
+    variable CHISEL_PORT and fallsback to port 8080).
 
     --key, An optional string to seed the generation of a ECDSA public
     and private key pair. All communications will be secured using this
@@ -124,7 +125,7 @@ var serverHelp = `
     --auth, An optional string representing a single user with full
     access, in the form of <user:pass>. It is equivalent to creating an
     authfile with {"<user:pass>": [""]}. If unset, it will use the
-    environment variable AUTH.
+    environment variable CHISEL_AUTH.
 
     --keepalive, An optional keepalive interval. Since the underlying
     transport is HTTP, in many instances we'll be traversing through
@@ -195,7 +196,7 @@ func server(args []string) {
 	flags.Parse(args)
 
 	if *host == "" {
-		*host = os.Getenv("HOST")
+		*host = settings.Env("HOST")
 	}
 	if *host == "" {
 		*host = "0.0.0.0"
@@ -204,13 +205,16 @@ func server(args []string) {
 		*port = *p
 	}
 	if *port == "" {
-		*port = os.Getenv("PORT")
+		*port = settings.Env("PORT")
 	}
 	if *port == "" {
 		*port = "8080"
 	}
+	if config.Auth == "" {
+		config.Auth = settings.Env("AUTH")
+	}
 	if config.KeySeed == "" {
-		config.KeySeed = os.Getenv("CHISEL_KEY")
+		config.KeySeed = settings.Env("KEY")
 	}
 	s, err := chserver.NewServer(config)
 	if err != nil {
@@ -340,7 +344,7 @@ var clientHelp = `
     --auth, An optional username and password (client authentication)
     in the form: "<user>:<pass>". These credentials are compared to
     the credentials inside the server's --authfile. defaults to the
-    AUTH environment variable.
+    CHISEL_AUTH environment variable.
 
     --keepalive, An optional keepalive interval. Since the underlying
     transport is HTTP, in many instances we'll be traversing through
@@ -421,7 +425,7 @@ func client(args []string) {
 	config.Remotes = args[1:]
 	//default auth
 	if config.Auth == "" {
-		config.Auth = os.Getenv("AUTH")
+		config.Auth = settings.Env("AUTH")
 	}
 	//move hostname onto headers
 	if *hostname != "" {
